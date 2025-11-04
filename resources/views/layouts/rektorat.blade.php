@@ -15,8 +15,9 @@
     .sidebar {
         width: 220px;
         min-height: 100vh;
-        background: #fff;
-        border-right: 1px solid #e5e7eb;
+        /* Blue gradient background */
+        background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%);
+        border-right: 1px solid rgba(255,255,255,0.06);
         position: fixed;
         top: 0;
         left: 0;
@@ -24,13 +25,16 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        color: #ffffff;
     }
     .sidebar h2 {
         font-size: 18px;
         font-weight: bold;
         margin-bottom: 30px;
-        color: #1f2937;
+        color: #ffffff;
     }
+    /* override inline span color to match sidebar */
+    .sidebar h2 span { color: rgba(255,255,255,0.9) !important; font-size:12px; }
     .nav-links {
         flex-grow: 1;
     }
@@ -39,16 +43,19 @@
         padding: 10px 15px;
         margin-bottom: 10px;
         border-radius: 8px;
-        color: #374151;
+        color: rgba(255,255,255,0.95);
         text-decoration: none;
-        transition: 0.2s;
+        transition: background 0.18s ease, transform 0.12s ease;
     }
     .nav-item:hover {
-        background: #f3f4f6;
+        background: rgba(255,255,255,0.06);
+        color: #ffffff;
+        transform: translateY(-1px);
     }
     .nav-item.active {
-        background: #2563eb;
-        color: #fff;
+        background: #ffff; /* darker blue for active */
+        color: #1d4ed8;
+        box-shadow: 0 6px 12px rgba(29,78,216,0.12);
     }
     .user-menu {
         position: relative;
@@ -159,7 +166,6 @@
 
             <div class="nav-links">
                 <a href="{{ route('rektorat.dashboard') }}" class="nav-item {{ request()->routeIs('rektorat.dashboard') ? 'active' : '' }}">Dashboard</a>
-                <a href="{{ route('rektorat.rekap_fakultas') }}" class="nav-item {{ request()->routeIs('rektorat.rekap_fakultas') ? 'active' : '' }}">Rekap Fakultas</a>
                 <a href="{{ route('rektorat.rekap_matakuliah') }}" class="nav-item {{ request()->routeIs('rektorat.rekap_matakuliah') ? 'active' : '' }}">Rekap Mata Kuliah</a>
                 <a href="{{ route('rektorat.input_nilai') }}" class="nav-item {{ request()->routeIs('rektorat.input_nilai') ? 'active' : '' }}">Input Nilai</a>
             </div>

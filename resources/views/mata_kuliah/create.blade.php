@@ -3,6 +3,7 @@
 @section('title', 'Input Mata Kuliah')
 
 @section('content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <style>
     .form-container {
         max-width: 900px;
@@ -331,46 +332,46 @@
                         Fakultas
                         <span class="required">*</span>
                     </label>
-                    <select id="fakultas" class="form-select">
-                        <option value="">Pilih Fakultas</option>
-                        @foreach($fakultasList as $f)
-                            <option value="{{ $f->id }}">{{ $f->nama_fakultas }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                <select id="fakultas" class="form-select">
+                    <option value="">Pilih Fakultas</option>
+                    @foreach($fakultasList as $f)
+                        <option value="{{ $f->id }}">{{ $f->nama_fakultas }}</option>
+                    @endforeach
+                </select>
+            </div>
 
                 <div class="form-group">
                     <label for="departemen" class="form-label">
                         Departemen
                         <span class="required">*</span>
                     </label>
-                    <select id="departemen" class="form-select">
-                        <option value="">Pilih Departemen</option>
-                    </select>
-                </div>
+                <select id="departemen" class="form-select">
+                    <option value="">Pilih Departemen</option>
+                </select>
+            </div>
 
-                <div class="form-group">
+            <div class="form-group">
                     <label for="semester" class="form-label">
                         Semester
                         <span class="required">*</span>
                     </label>
                     <select id="semester" class="form-select">
-                        <option value="">Pilih Semester</option>
-                        <option value="1">Semester 1</option>
-                        <option value="2">Semester 2</option>
-                        <option value="3">Semester 3</option>
-                        <option value="4">Semester 4</option>
+                    <option value="">Pilih Semester</option>
+                    <option value="1">Semester 1</option>
+                    <option value="2">Semester 2</option>
+                    <option value="3">Semester 3</option>
+                    <option value="4">Semester 4</option>
                         <option value="5">Semester 5</option>
                         <option value="6">Semester 6</option>
                         <option value="7">Semester 7</option>
                         <option value="8">Semester 8</option>
-                    </select>
-                </div>
+                </select>
+            </div>
             </div>
         </div>
 
-        {{-- Daftar Mata Kuliah --}}
-        <div id="daftar-mk" class="mt-4"></div>
+            {{-- Daftar Mata Kuliah --}}
+            <div id="daftar-mk" class="mt-4"></div>
 
         {{-- Klaim Metode --}}
         <div id="klaim-metode" class="fade-in" style="display:none;">
@@ -398,7 +399,7 @@
             </div>
         </div>
 
-        {{-- Komponen Penilaian --}}
+            {{-- Komponen Penilaian --}}
         <div id="komponen-penilaian" class="fade-in" style="display:none;">
             <div class="form-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb;">
@@ -562,13 +563,13 @@ function loadMataKuliah() {
                             <table class="matakuliah-table">
                                 <thead>
                                     <tr>
-                                        <th>Pilih</th>
-                                        <th>Kode</th>
+                                    <th>Pilih</th>
+                                    <th>Kode</th>
                                         <th>Nama Mata Kuliah</th>
-                                        <th>SKS</th>
-                                    </tr>
-                                </thead>
-                                <tbody>`;
+                                    <th>SKS</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
                 data.forEach(mk => {
                     html += `
                         <tr>
@@ -613,49 +614,57 @@ departemen.addEventListener('change', loadMataKuliah);
 semester.addEventListener('change', loadMataKuliah);
 
 // === Simpan Metode ===
-btnSimpanMetode.addEventListener('click', function() {
-    if (!metodeSelect.value) {
-        alert('Harap pilih metode pembelajaran terlebih dahulu!');
-        return;
-    }
+btnSimpanMetode.addEventListener('click', async function() {
+    try {
+        if (!metodeSelect.value) {
+            alert('Harap pilih metode pembelajaran terlebih dahulu!');
+            komponenContainer.style.display = 'none';
+            return;
+        }
+        if (!selectedMataKuliahId) {
+            alert('Harap pilih mata kuliah terlebih dahulu!');
+            komponenContainer.style.display = 'none';
+            return;
+        }
 
-    if (!selectedMataKuliahId) {
-        alert('Harap pilih mata kuliah terlebih dahulu!');
-        return;
-    }
+        const token = document.querySelector('meta[name="csrf-token"]').content;
+        const response = await fetch('{{ route("klaim.store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                data: [{
+                    mata_kuliah_id: selectedMataKuliahId,
+                    metode: metodeSelect.value
+                }]
+            })
+        });
 
-    const formData = new FormData();
-    formData.append('data', JSON.stringify([{
-        mata_kuliah_id: selectedMataKuliahId,
-        metode: metodeSelect.value
-    }]));
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
 
-    fetch('/klaim-metode/simpan', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value || '',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-            data: [{
-                mata_kuliah_id: selectedMataKuliahId,
-                metode: metodeSelect.value
-            }]
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
         if (data.success) {
             metodeSaved = true;
             komponenContainer.style.display = 'block';
             alert('Metode pembelajaran berhasil disimpan!');
+        } else {
+            throw new Error(data.message || 'Gagal menyimpan metode');
         }
-    })
-    .catch(error => {
+    } catch (error) {
         console.error('Error:', error);
-        alert('Gagal menyimpan metode pembelajaran');
-    });
+        alert(error.message || 'Gagal menyimpan metode pembelajaran');
+        komponenContainer.style.display = 'none';
+    }
+});
+metodeSelect.addEventListener('change', function() {
+    komponenContainer.style.display = 'none';
+    metodeSaved = false;
+    resetPersentase();
 });
 
 // === Tambah Komponen ===
@@ -814,6 +823,11 @@ btnSimpan.addEventListener('click', function(e) {
     const formData = new FormData();
     formData.append('_token', '{{ csrf_token() }}');
     formData.append('mata_kuliah_id', selectedMataKuliahId);
+    formData.append('metode', metodeSelect.value); // Pastikan metode terkirim
+    // Sertakan data filter agar controller dapat mengarahkan kembali ke rekap dengan filter yang sama
+    formData.append('fakultas', fakultas.value || '');
+    formData.append('departemen', departemen.value || '');
+    formData.append('semester', semester.value || '');
     formData.append('komponen_data', JSON.stringify(komponenData));
     formData.append('dokumen', dokumenInput.files[0]);
 

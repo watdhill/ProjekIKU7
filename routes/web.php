@@ -44,12 +44,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('dosen', DosenController::class);
 
     // Klaim Metode Pembelajaran
-    Route::get('klaim', [KlaimController::class, 'index'])->name('klaim.index');
-    Route::get('klaim/create', [KlaimController::class, 'create'])->name('klaim.create');
-    Route::post('klaim', [KlaimController::class, 'store'])->name('klaim.store');
-    Route::get('klaim/{klaim}/edit', [KlaimController::class, 'edit'])->name('klaim.edit');
-    Route::put('klaim/{klaim}', [KlaimController::class, 'update'])->name('klaim.update');
-    Route::delete('klaim/{klaim}', [KlaimController::class, 'destroy'])->name('klaim.destroy');
+    Route::get('klaim', [KlaimMetodeController::class, 'index'])->name('klaim.index');
+    Route::get('/klaim-metode/create', [KlaimMetodeController::class, 'create'])->name('klaim.create');
+    Route::post('/klaim-metode/store', [KlaimMetodeController::class, 'store'])->name('klaim.store');
+    Route::get('klaim/{klaim}/edit', [KlaimMetodeController::class, 'edit'])->name('klaim.edit');
+    Route::put('klaim/{klaim}', [KlaimMetodeController::class, 'update'])->name('klaim.update');
+    Route::delete('klaim/{klaim}', [KlaimMetodeController::class, 'destroy'])->name('klaim.destroy');
 
     // Input & Monitoring Nilai
     Route::resource('nilai', NilaiController::class);
@@ -73,6 +73,7 @@ Route::prefix('rektorat')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/rekap_fakultas', [RektoratController::class, 'rekapFakultas'])->name('rektorat.rekap_fakultas');
     Route::get('/rekap_matakuliah', [RektoratController::class, 'rekapMataKuliah'])->name('rektorat.rekap_matakuliah');
     Route::get('/input_nilai', [RektoratController::class, 'inputNilai'])->name('rektorat.input_nilai');
+    Route::get('/get-departemen/{fakultasId}', [RektoratController::class, 'getDepartemen'])->name('rektorat.getDepartemen');
 });
 
 // Auth routes default Laravel (register, login, password reset)

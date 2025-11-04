@@ -17,7 +17,13 @@ class MataKuliah extends Model
         'kode_matkul',
         'nama_matkul',
         'sks',
-        'metode'
+        'metode',
+        'dokumen_path',
+        'komponen'
+    ];
+
+    protected $casts = [
+        'komponen' => 'array',
     ];
 
     // Relasi: mata kuliah punya banyak klaim metode
@@ -27,6 +33,12 @@ class MataKuliah extends Model
     }
 
     public function departemen() {
-    return $this->belongsTo(Departemen::class);
-}
+        return $this->belongsTo(Departemen::class);
+    }
+
+    // Relasi: mata kuliah punya banyak komponen nilai
+    public function komponenNilai()
+    {
+        return $this->hasMany(KomponenNilai::class, 'mata_kuliah_id');
+    }
 }

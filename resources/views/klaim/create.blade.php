@@ -124,10 +124,7 @@
     <div class="form-card">
         <h1 class="form-title">Klaim Metode Mata Kuliah</h1>
         <p class="form-subtitle">Pilih mata kuliah dan metode pembelajaran yang akan digunakan</p>
-        
-        <form action="{{ route('klaim.store') }}" method="POST">
-            @csrf
-            
+        <form id="klaimForm">
             <div class="form-group">
                 <label for="mata_kuliah" class="form-label">
                     Mata Kuliah
@@ -139,12 +136,8 @@
                     <option value="2">IF102 - Struktur Data</option>
                     <option value="3">IF103 - Basis Data</option>
                 </select>
-                @error('mata_kuliah_id')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
                 <p class="form-help">Pilih mata kuliah yang akan diklaim metodenya</p>
             </div>
-
             <div class="form-group">
                 <label for="metode" class="form-label">
                     Metode Pembelajaran
@@ -157,18 +150,56 @@
                     <option value="CBM">Case Based Method (CBM)</option>
                     <option value="Biasa">Metode Biasa</option>
                 </select>
-                @error('metode')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
                 <p class="form-help">Pilih metode pembelajaran yang akan digunakan</p>
             </div>
-
-            <div style="display: flex; gap: 12px; margin-top: 32px;">
-                <button type="submit" class="btn-submit">Simpan Klaim</button>
-            </div>
-            
-            <a href="{{ route('klaim.index') }}" class="btn-cancel">Batal</a>
         </form>
+        <div id="komponenFormContainer" style="display:none; margin-top:32px;"></div>
+        <a href="{{ route('klaim.index') }}" class="btn-cancel">Batal</a>
+        <script>
+        document.getElementById('metode').addEventListener('change', function() {
+            var metode = this.value;
+            var mk = document.getElementById('mata_kuliah').value;
+            var container = document.getElementById('komponenFormContainer');
+            if(metode && mk) {
+                container.style.display = 'block';
+                container.innerHTML = `
+                <form action="/matkul" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="mata_kuliah_id" value="${mk}">
+                    <input type="hidden" name="metode" value="${metode}">
+                    <div id="komponenList">
+                        <div class="form-group">
+                            <label>Nama Komponen</label>
+                            <input type="text" name="komponen_data[0][nama]" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Persentase (%)</label>
+                            <input type="number" name="komponen_data[0][presentase]" class="form-control" required>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addKomponen()" class="btn-submit" style="background:#e5e7eb;color:#2563eb;">+ Tambah Komponen</button>
+                    <div class="form-group" style="margin-top:24px;">
+                        <label>Upload Dokumen (PDF/DOC/DOCX)</label>
+                        <input type="file" name="dokumen" accept=".pdf,.doc,.docx" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Simpan Semua</button>
+                </form>
+                <script>
+                var komponenIndex = 1;
+                function addKomponen() {
+                    var list = document.getElementById('komponenList');
+                    var html = `<div class='form-group'><label>Nama Komponen</label><input type='text' name='komponen_data[${komponenIndex}][nama]' class='form-control' required></div><div class='form-group'><label>Persentase (%)</label><input type='number' name='komponen_data[${komponenIndex}][presentase]' class='form-control' required></div>`;
+                    list.insertAdjacentHTML('beforeend', html);
+                    komponenIndex++;
+                }
+                </script>
+            `;
+            } else {
+                container.style.display = 'none';
+                container.innerHTML = '';
+            }
+        });
+        </script>
     </div>
 </div>
 @endsection

@@ -146,29 +146,82 @@
 <form method="GET" class="filter-section">
     <div class="filter-row">
         <div class="filter-group">
-            <label class="filter-label">Semester</label>
-            <select name="semester" class="filter-select" onchange="this.form.submit()">
-                <option value="">Pilih Semester</option>
-                <option value="Ganjil" {{ request('semester')=='Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                <option value="Genap" {{ request('semester')=='Genap' ? 'selected' : '' }}>Genap</option>
+            <label class="filter-label">Fakultas</label>
+            <select id="fakultas" name="fakultas" class="filter-select">
+                <option value="">Pilih Fakultas</option>
+                @foreach($fakultas as $fak)
+                    <option value="{{ $fak->id }}" {{ request('fakultas') == $fak->id ? 'selected' : '' }}>
+                        {{ $fak->nama_fakultas }}
+                    </option>
+                @endforeach
             </select>
         </div>
         <div class="filter-group">
             <label class="filter-label">Departemen</label>
-            <select name="departemen" class="filter-select" onchange="this.form.submit()">
+            <select id="departemen" name="departemen" class="filter-select">
                 <option value="">Pilih Departemen</option>
-                <option value="Teknik Komputer" {{ request('departemen')=='Teknik Komputer' ? 'selected' : '' }}>Teknik Komputer</option>
-                <option value="Sistem Informasi" {{ request('departemen')=='Sistem Informasi' ? 'selected' : '' }}>Sistem Informasi</option>
-                <option value="Informatika" {{ request('departemen')=='Informatika' ? 'selected' : '' }}>Informatika</option>
+                @foreach($departemen as $dept)
+                    <option value="{{ $dept->id }}" {{ request('departemen') == $dept->id ? 'selected' : '' }}>
+                        {{ $dept->nama_departemen }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Semester</label>
+            <select name="semester" class="filter-select">
+                <option value="">Pilih Semester</option>
+                @for($i = 1; $i <= 8; $i++)
+                    <option value="{{ $i }}" {{ request('semester') == $i ? 'selected' : '' }}>
+                        Semester {{ $i }}
+                    </option>
+                @endfor
             </select>
         </div>
     </div>
+
+    <div style="margin-top: 16px;">
+        <button type="submit" class="btn-filter">
+            <i class="fas fa-filter"></i> Terapkan Filter
+        </button>
+    </div>
+
+    <script>
+    document.getElementById('fakultas').addEventListener('change', function() {
+        const fakultasId = this.value;
+        const departemenSelect = document.getElementById('departemen');
+        
+        // Reset departemen saat fakultas berubah
+        departemenSelect.innerHTML = '<option value="">Pilih Departemen</option>';
+        
+        if (fakultasId) {
+            // Fetch departemen berdasarkan fakultas
+            fetch(`/rektorat/get-departemen/${fakultasId}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.id;
+                        option.textContent = dept.nama_departemen;
+                        departemenSelect.appendChild(option);
+                    });
+
+                    // Jika ada departemen yang tersimpan di URL, pilih itu
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const savedDept = urlParams.get('departemen');
+                    if (savedDept) {
+                        departemenSelect.value = savedDept;
+                    }
+                });
+        }
+    });
+    </script>
 </form>
 
-@if(request('departemen'))
+@if($selectedDept = $departemen->where('id', request('departemen'))->first())
 <div style="margin-bottom: 24px; padding: 16px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 12px; border-left: 4px solid #2563eb;">
     <h2 style="font-size: 20px; font-weight: 700; color: #1e40af; margin: 0;">
-        📁 Departemen {{ request('departemen') }}
+        📁 {{ $selectedDept->nama_departemen }}
     </h2>
 </div>
 @endif
@@ -195,11 +248,37 @@
                 <tr>
                     <td class="kode-cell">{{ $mk['kode'] ?? '-' }}</td>
                     <td class="nama-cell">{{ $mk['nama'] ?? '-' }}</td>
-                    <td>
-                        @if(isset($mk['metode']) && $mk['metode'] != '-')
-                            <span class="metode-badge" style="background: #d1fae5; color: #065f46;">
-                                {{ $mk['metode'] }}
-                            </span>
+                    <td style="text-align: left; padding-left: 12px;">
+                        @php
+                            $klaim = $mk['klaim_list'] ?? [];
+                        @endphp
+
+                        @if(count($klaim) > 0)
+                            {{-- Tampilkan klaim terbaru sebagai badge --}}
+                            @php $latest = $klaim[count($klaim)-1]; @endphp
+                            <div style="margin-bottom:6px;">
+                                <span class="metode-badge" style="background: #d1fae5; color: #065f46;">
+                                    {{ $latest['metode'] }}
+                                </span>
+                                <small style="color:#6b7280; margin-left:8px;">{{ 
+                                    \Illuminate\Support\Str::limit($latest['created_at'], 10) }}
+                                </small>
+                            </div>
+
+                            {{-- Riwayat klaim (semua) --}}
+                            <div style="font-size:13px; color:#374151;">
+                                @foreach($klaim as $k)
+                                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;">
+                                        <span style="padding:4px 8px; border-radius:6px; background:#eef2ff; font-weight:600; font-size:12px;">{{ $k['metode'] }}</span>
+                                        <span style="color:#6b7280; font-size:12px;">{{ \Illuminate\Support\Str::limit($k['created_at'], 10) }}</span>
+                                        @if($k['valid'])
+                                            <span style="margin-left:auto; color:#065f46; font-weight:700;">Valid</span>
+                                        @else
+                                            <span style="margin-left:auto; color:#9ca3af;">Pending</span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         @else
                             <span style="color: #9ca3af;">-</span>
                         @endif
